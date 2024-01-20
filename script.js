@@ -14,7 +14,10 @@ function displayTemperature(response) {
   windSpeedElement.innerHTML = `${response.data.wind.speed}km/h`;
   descriptionElement.innerHTML= response.data.condition.description;
   iconElement.innerHTML = `<img src="${response.data.condition.icon_url}" class="current-temperature-icon" />`;
+
+  liveForecast(response.data.city);
 }
+
 
 function search(city) {
   let searchInputElement = document.querySelector("#search-input");
@@ -59,26 +62,40 @@ function formatDate(date) {
   return `${formattedDay} ${hours}:${minutes}`;
 }
 
-function display() {
-  let days = ["Tue", "Wed", "Thu", "Fri", "Sat"];
+function liveForecast(city) {
+  let apiKey = "fbeat7a34efb4a7e60ae9e40fbb3ccoa";
+  let apiUrl = `https://api.shecodes.io/weather/v1/forecast?query=${city}&key=${apiKey}&units=metric`;
+  axios(apiUrl).then(display);
+}
+
+function formatDay(timestamp) {
+  let date = new Date(timestamp * 1000);
+  let days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  return days[date.getDay()];
+}
+function display(response) {
   let forecastHtml = "";
 
-  days.forEach(function(day) {
+  response.data.daily.forEach(function(day,index) {
+    if (index < 5) {
     forecastHtml =
       forecastHtml +
       `
       <div class="weather-forecast-day">
-        <div class="weather-forecast-date">${day}</div>
-        <div class="weather-forecast-icon">🌤️</div>
+        <div class="weather-forecast-date">${formatDay(day.time)}</div>
+        <img src="${day.condition.icon_url}" class= "weather-forecast-icon" alt="" />
         <div class="weather-forecast-temperatures">
           <div class="weather-forecast-temperature">
-            <strong>15º</strong>
+            <strong>${Math.round(day.temperature.maximum)}º</strong>
           </div>
-          <div class="weather-forecast-temperature">9º</div>
+          <div class="weather-forecast-temperature">${Math.round(day.temperature.minimum)}º</div>
         </div>
       </div>
     `;
+    }
   });
+
 
   let forecastElement = document.querySelector("#forecast");
   forecastElement.innerHTML = forecastHtml;
@@ -95,4 +112,3 @@ let currentDate = new Date();
 currentDateELement.innerHTML = formatDate(currentDate);
 
 search("Abuja");
-display();
